@@ -1,0 +1,352 @@
+openapi: "3.0.0"
+info:
+  title: HRM Location Backend API
+  version: "1.0.0"
+servers:
+  - url: http://localhost:5000
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+paths:
+  # ========================= AUTH =========================
+  /api/auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password, role]
+              properties:
+                name: { type: string, example: "Admin User" }
+                email: { type: string, example: "admin@example.com" }
+                password: { type: string, example: "Admin@123" }
+                role: { type: string, enum: [Admin, Employee], example: "Admin" }
+      responses:
+        '201':
+          description: User created successfully
+
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, example: "admin@example.com" }
+                password: { type: string, example: "Admin@123" }
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string, example: "Login successful" }
+                  accessToken: { type: string, example: "jwt_access_token" }
+                  refreshToken: { type: string, example: "jwt_refresh_token" }
+
+  # ========================= EMPLOYEES =========================
+  /api/employees:
+    post:
+      tags: [Employees]
+      summary: Create an employee (Admin)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password, role]
+              properties:
+                name: { type: string, example: "John Doe" }
+                email: { type: string, example: "john.doe@example.com" }
+                phone: { type: string, example: "1234567890" }
+                designation: { type: string, example: "Developer" }
+                department: { type: string, example: "IT" }
+                dateOfJoining: { type: string, example: "2025-10-14" }
+                password: { type: string, example: "John@123" }
+                role: { type: string, example: "Employee" }
+      responses:
+        '200':
+          description: Employee created successfully
+
+    get:
+      tags: [Employees]
+      summary: Get employees (Admin) with pagination and search
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: Page number
+          schema: { type: integer, example: 1 }
+        - name: limit
+          in: query
+          description: Number of employees per page
+          schema: { type: integer, example: 10 }
+        - name: search
+          in: query
+          description: Search by name/email
+          schema: { type: string, example: "John" }
+      responses:
+        '200':
+          description: List of employees
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id: { type: string, example: "123" }
+                    name: { type: string, example: "John Doe" }
+                    email: { type: string, example: "john.doe@example.com" }
+                    phone: { type: string, example: "1234567890" }
+                    designation: { type: string, example: "Developer" }
+                    department: { type: string, example: "IT" }
+                    dateOfJoining: { type: string, example: "2025-10-14" }
+                    role: { type: string, example: "Employee" }
+
+  /api/employees/{id}:
+    put:
+      tags: [Employees]
+      summary: Update an employee (Admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Employee ID
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string, example: "John Doe" }
+                email: { type: string, example: "john.doe@example.com" }
+                phone: { type: string, example: "1234567890" }
+                designation: { type: string, example: "Developer" }
+                department: { type: string, example: "IT" }
+                dateOfJoining: { type: string, example: "2025-10-14" }
+                role: { type: string, example: "Employee" }
+      responses:
+        '200':
+          description: Employee updated successfully
+
+    delete:
+      tags: [Employees]
+      summary: Delete an employee (Admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Employee ID
+          schema: { type: string }
+      responses:
+        '200':
+          description: Employee deleted successfully
+
+  # ========================= CONFIG =========================
+  /api/config/office:
+    post:
+      tags: [Config]
+      summary: Set office location (Admin)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [officeName, latitude, longitude, radius]
+              properties:
+                officeName: { type: string, example: "Main Office" }
+                latitude: { type: number, example: 12.345678 }
+                longitude: { type: number, example: 67.890123 }
+                radius: { type: number, example: 100 }
+      responses:
+        '200':
+          description: Office location set successfully
+
+  # ========================= ATTENDANCE =========================
+  /api/attendance/checkin:
+    post:
+      tags: [Attendance]
+      summary: Check-in (Employee)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [latitude, longitude]
+              properties:
+                latitude: { type: number, example: 12.345678 }
+                longitude: { type: number, example: 67.890123 }
+      responses:
+        '200':
+          description: Check-in successful
+
+  /api/attendance/checkout:
+    post:
+      tags: [Attendance]
+      summary: Check-out (Employee)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [latitude, longitude]
+              properties:
+                latitude: { type: number, example: 12.345678 }
+                longitude: { type: number, example: 67.890123 }
+      responses:
+        '200':
+          description: Check-out successful
+
+  /api/attendance:
+    get:
+      tags: [Attendance]
+      summary: Admin - get attendance records
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: employeeId
+          in: query
+          description: Filter by employee
+          schema: { type: string, example: "123" }
+        - name: date
+          in: query
+          description: Filter by date (YYYY-MM-DD)
+          schema: { type: string, example: "2025-10-14" }
+        - name: department
+          in: query
+          description: Filter by department
+          schema: { type: string, example: "IT" }
+      responses:
+        '200':
+          description: Attendance records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    employeeId: { type: string, example: "123" }
+                    name: { type: string, example: "John Doe" }
+                    checkIn: { type: string, format: date-time, example: "2025-10-14T09:00:00Z" }
+                    checkOut: { type: string, format: date-time, example: "2025-10-14T17:00:00Z" }
+
+  /api/attendance/history:
+    get:
+      tags: [Attendance]
+      summary: Employee - view personal attendance history
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, example: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, example: 10 }
+      responses:
+        '200':
+          description: Attendance history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    checkIn: { type: string, format: date-time }
+                    checkOut: { type: string, format: date-time }
+                    status: { type: string, example: "Present" }
+
+  /api/attendance/report:
+    get:
+      tags: [Attendance]
+      summary: Admin - download attendance report (JSON/CSV)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: format
+          in: query
+          description: File format (json/csv)
+          schema: { type: string, enum: [json, csv], example: "json" }
+      responses:
+        '200':
+          description: Attendance report generated
+
+  # ========================= GENERAL =========================
+  /api/profile:
+    get:
+      tags: [General]
+      summary: Get logged-in user profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: string, example: "123" }
+                  name: { type: string, example: "John Doe" }
+                  email: { type: string, example: "john.doe@example.com" }
+                  role: { type: string, example: "Employee" }
+
+  /api/dashboard:
+    get:
+      tags: [General]
+      summary: Get dashboard summary
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Dashboard data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalEmployees: { type: integer, example: 50 }
+                  totalPresentToday: { type: integer, example: 45 }
+                  totalAbsentToday: { type: integer, example: 5 }
+                  personalStats:
+                    type: object
+                    properties:
+                      totalDays: { type: integer, example: 200 }
+                      presentDays: { type: integer, example: 180 }
+                      absentDays: { type: integer, example: 20 }
